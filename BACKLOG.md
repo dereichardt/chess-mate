@@ -92,6 +92,12 @@ A second paid curriculum of **6 lessons** for **early intermediate** players who
 
 ---
 
+## Review / QA
+
+- **Review all Beginner lessons (7–12)** — Go through each Beginner Concepts lesson (Checks Captures Attacks, Piece Values & Simple Exchanges, Seeing Your Opponent's Threats, Defending a Piece Under Attack, Simple Checkmate Patterns, A Simple Thinking Routine) to ensure content is a good fit, FENs and challenges are correct, and there are no bugs (wrong moves, broken highlights, narration/text mismatches).
+
+---
+
 ## Data storage / Progress
 
 **Status: Implemented.**
