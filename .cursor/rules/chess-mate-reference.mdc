@@ -1,0 +1,21 @@
+---
+description: Always reference AGENTS.md before making any changes to the chess-mate application
+alwaysApply: true
+---
+
+# Chess-Mate Agent Reference
+
+Before making any changes to this application, read `/Users/davidreichardt/chess-mate/AGENTS.md`.
+
+It is the single source of truth for:
+- Project structure and where files belong
+- Routing, layouts, and which layout to use for new pages
+- State management (Zustand stores, TanStack Query usage)
+- The lesson system and static data conventions
+- Design system tokens (colors, spacing, typography, shadows)
+- Chess board highlight/arrow/challenge system
+- Component inventory and page completion status
+- Key conventions (imports, TypeScript, naming)
+- Known limitations — what is and isn't wired to the backend
+
+Also read `frontend/DESIGN.md` before making any UI or styling changes.

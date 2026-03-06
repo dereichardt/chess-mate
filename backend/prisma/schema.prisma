@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  rating    Int      @default(1200)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons   LessonProgress[]
+  puzzles   PuzzleAttempt[]
+  games     Game[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  content     String   @db.Text
+  difficulty  String   // beginner, intermediate, advanced
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress    LessonProgress[]
+}
+
+model LessonProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String
+  completed Boolean  @default(false)
+  progress  Int      @default(0) // 0-100
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Puzzle {
+  id          String   @id @default(cuid())
+  fen         String   // Starting position
+  solution    String   // Solution moves in UCI format
+  difficulty  String   // easy, medium, hard
+  description String?
+  createdAt   DateTime @default(now())
+
+  attempts    PuzzleAttempt[]
+}
+
+model PuzzleAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  puzzleId  String
+  solved    Boolean
+  attempts  Int      @default(0)
+  timeSpent Int?     // in seconds
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, puzzleId])
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  userId    String
+  fen       String   @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  moves     String[] @default([])
+  status    String   // active, completed, abandoned
+  result    String?  // win, loss, draw
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

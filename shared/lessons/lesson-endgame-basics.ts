@@ -1,0 +1,115 @@
+import type { SharedLesson } from './types'
+import { STARTING_FEN } from './constants'
+
+const lessonEndgameBasics: SharedLesson = {
+  id: 'endgame-basics',
+  number: 6,
+  title: 'Endgame Basics',
+  description:
+    'Learn the essential endgame techniques: king and pawn endings, and basic checkmates.',
+  duration: '15 min',
+  steps: [
+    {
+      title: 'Introduction',
+      text: 'The **endgame** is the final phase of a chess game — when most pieces have been traded and only a few remain on the board. Pawns and kings take center stage.\n\nTwo ideas will guide you through almost every endgame. First: your **king** is no longer a target to hide away. It becomes a strong piece that must march into the fight. Second: you must know how to **checkmate** with limited material — typically king and queen, or king and rook — so that when you win a pawn or exchange, you can actually finish the game.\n\nThis lesson introduces king activity, king-and-pawn essentials, and the two basic checkmates every player should know.',
+      narrationText: 'The endgame is the final phase of a chess game — when most pieces have been traded and only a few remain on the board. Pawns and kings take center stage.\n\nTwo ideas will guide you through almost every endgame. First: your **king** is no longer a target to hide away. It becomes a strong piece that must march into the fight. Second: you must know how to checkmate with limited material — typically king and queen, or king and rook — so that when you win a pawn or exchange, you can actually finish the game.\n\nThis lesson introduces king activity, king-and-pawn essentials, and the two basic checkmates every player should know.',
+      fen: STARTING_FEN,
+      interactive: false,
+    },
+    {
+      title: 'The King Becomes Active',
+      text: "In the opening and middlegame the king stays out of harm's way. In the endgame that changes. With fewer pieces on the board, checks and attacks are rarer — and the king can step forward without being easily trapped.\n\n**Centralize your king.** A king in the center controls key squares, supports its own pawns, and restricts the enemy king. Here White's king on e5 is active: it guards the pawn on e4 and keeps the black king at bay. The black king on e8 is passive and cramped. In endgames, the side with the more active king usually has the advantage.",
+      narrationText: "In the opening and middlegame the king stays out of harm's way. In the endgame that changes. With fewer pieces on the board, checks and attacks are rarer — and the king can step forward without being easily trapped.\n\n**Centralize your king.** A king in the center controls key squares, supports its own pawns, and restricts the enemy king. Here White's king on e5 is active: it guards the pawn on e4 and keeps the black king at bay. The black king on e8 is passive and cramped. In endgames, the side with the more active king usually has the advantage.",
+      fen: '4k3/8/8/4K3/4P3/8/8/8 w - - 0 1',
+      interactive: false,
+      fillSquares: ['e5', 'e4'],
+    },
+    {
+      title: 'Centralize Your King',
+      text: "It is White's turn. White has a pawn on d4 and the king on e3 — but the king is still one step away from the center.\n\nBring the king to a central square so it can support the pawn and restrict the black king. **Find the move that puts the white king on e4.**",
+      narrationText: "It is White's turn. White has a pawn on d4 and the king on e3 — but the king is still one step away from the center.\n\nBring the king to a central square so it can support the pawn and restrict the black king. Find the move that puts the white king on e4.",
+      fen: '4k3/8/8/8/3P4/4K3/8/8 w - - 0 1',
+      interactive: true,
+      challenge: { from: 'e3', to: 'e4' },
+    },
+    {
+      title: 'King and Pawn: Supporting the Pawn',
+      text: "To **queen** a pawn — push it to the eighth rank and promote it to a queen — you usually need your king. A lone pawn can be stopped by the enemy king; a pawn supported by its own king is much harder to block.\n\n**Opposition** means the two kings face each other with one square between them. The player who does *not* have to move often has to give way, allowing the other king to advance. Here White's king on e5 supports the pawn on e4 and keeps the black king on e7 at a distance. White can make progress by advancing the pawn and using the king to control key squares in front of it. Once the pawn reaches the seventh rank with your king nearby, you can often promote and win — as in the next position.",
+      narrationText: "To queen a pawn — push it to the eighth rank and promote it to a queen — you usually need your king. A lone pawn can be stopped by the enemy king; a pawn supported by its own king is much harder to block.\n\nOpposition means the two kings face each other with one square between them. The player who does not have to move often has to give way, allowing the other king to advance. Here White's king on e5 supports the pawn on e4 and keeps the black king on e7 at a distance. White can make progress by advancing the pawn and using the king to control key squares in front of it. Once the pawn reaches the seventh rank with your king nearby, you can often promote and win — as in the next position.",
+      fen: '8/4k3/8/4K3/4P3/8/8/8 w - - 0 1',
+      interactive: false,
+      fillSquares: ['e5', 'e4', 'e6'],
+      arrows: [['e5', 'e4', 'rgba(34,197,94,0.85)']],
+    },
+    {
+      title: 'Queen the Pawn',
+      text: "White has a pawn on e7 and the king on d7; Black's king is on g7. White can queen the pawn immediately — one move promotes it to a queen and wins.\n\nFind the move that pushes the pawn to the eighth rank and promotes it to a queen.",
+      narrationText: "White has a pawn on e7 and the king on d7; Black's king is on g7. White can queen the pawn immediately — one move promotes it to a queen and wins.\n\nFind the move that pushes the pawn to the eighth rank and promotes it to a queen.",
+      fen: '8/3KP1k1/8/8/8/8/8/8 w - - 0 1',
+      interactive: true,
+      challenge: { from: 'e7', to: 'e8' },
+    },
+    {
+      title: 'Checkmate with King and Queen',
+      text: 'With a **queen** you can force checkmate against a lone king. The method: use your king and queen together to shrink the board. Drive the enemy king to the edge — or into a corner — and then deliver the final blow.\n\nHere the black king is trapped on a8. The white queen on b7 controls the entire seventh rank and the b8 square; the white king on c6 guards a7 and b7. One queen move to b8 or a7 would be checkmate. The queen and king form a net the black king cannot escape.',
+      narrationText: "With a queen you can force checkmate against a lone king. The method: use your king and queen together to shrink the board. Drive the enemy king to the edge — or into a corner — and then deliver the final blow.\n\nHere the black king is trapped on a8. The white queen on b7 controls the entire seventh rank and the b8 square; the white king on c6 guards a7 and b7. One queen move to b8 or a7 would be checkmate. The queen and king form a net the black king cannot escape.",
+      fen: 'k7/1Q6/2K5/8/8/8/8/8 w - - 0 1',
+      interactive: false,
+      arrows: [
+        ['b7', 'b8', 'rgba(34,197,94,0.85)'],
+        ['b7', 'a7', 'rgba(34,197,94,0.85)'],
+        ['b7', 'a8', 'rgba(34,197,94,0.85)'],
+      ],
+      captureSquares: ['a8'],
+    },
+    {
+      title: 'Deliver Checkmate with the Queen',
+      text: 'The black king is stuck on h8. The white king on g6 controls the escape squares g7 and g8. The white queen can end the game in one move.\n\nFind the move that delivers checkmate.',
+      narrationText: 'The black king is stuck on h8. The white king on g6 controls the escape squares g7 and g8. The white queen can end the game in one move.\n\nFind the move that delivers checkmate.',
+      fen: '7k/Q7/6K1/8/8/8/8/8 w - - 0 1',
+      interactive: true,
+      challenge: [
+        { from: 'a7', to: 'h7' },
+        { from: 'a7', to: 'g7' },
+        { from: 'a7', to: 'a8' },
+        { from: 'a7', to: 'b8' },
+        { from: 'a7', to: 'c8' },
+        { from: 'a7', to: 'd8' },
+        { from: 'a7', to: 'e8' },
+        { from: 'a7', to: 'f8' },
+      ],
+    },
+    {
+      title: 'Checkmate with King and Rook',
+      text: 'A **rook** together with your **king** can force checkmate against a lone king. Use the rook to cut off ranks or files, bring your king forward, and drive the enemy king to the edge. Once it is trapped on the back rank with no escape, you deliver checkmate.\n\nHere White has already delivered checkmate. The white rook on a6 gives check along the a-file — the black king on a8 is in check. The white king on c7 controls b7 and b8, so the black king cannot escape to either square. The edge of the board completes the trap. No further move is needed; this is the finished **king and rook** checkmate.',
+      narrationText: 'A rook together with your king can force checkmate against a lone king. Use the rook to cut off ranks or files, bring your king forward, and drive the enemy king to the edge. Once it is trapped on the back rank with no escape, you deliver checkmate.\n\nHere White has already delivered checkmate. The white rook on a6 gives check along the a-file — the black king on a8 is in check. The white king on c7 controls b7 and b8, so the black king cannot escape to either square. The edge of the board completes the trap. No further move is needed; this is the finished king and rook checkmate.',
+      fen: 'k7/2K5/R7/8/8/8/8/8 b - - 0 1',
+      interactive: false,
+      fillSquares: ['a6', 'c7'],
+      captureSquares: ['a8'],
+      arrows: [
+        ['a6', 'a8', 'rgba(34,197,94,0.85)'],
+        ['c7', 'b7', 'rgba(34,197,94,0.85)'],
+        ['c7', 'b8', 'rgba(34,197,94,0.85)'],
+      ],
+    },
+    {
+      title: 'Deliver Checkmate with the Rook',
+      text: 'The black king is in the corner on a8. The white king on c7 controls b7 and b8. The white rook on b6 can finish the game in one move.\n\nFind the rook move that gives checkmate.',
+      narrationText: 'The black king is in the corner on a8. The white king on c7 controls b7 and b8. The white rook on b6 can finish the game in one move.\n\nFind the rook move that gives checkmate.',
+      fen: 'k7/2K5/1R6/8/8/8/8/8 w - - 0 1',
+      interactive: true,
+      challenge: { from: 'b6', to: 'a6' },
+    },
+    {
+      title: 'Endgame Basics Summary',
+      text: 'You now have the essentials. **Activate your king** — bring it to the center and use it to support pawns and restrict the enemy king. In **king and pawn** endgames, use your king to help your pawns advance; opposition and key squares decide who wins. When you have an extra queen or rook, know how to **checkmate**: with a queen, shrink the board and drive the king to the edge; with a rook, cut off ranks and files and use your king to help. Practise these ideas and you will be able to convert a winning position into a full point.',
+      narrationText: 'You now have the essentials. Activate your king — bring it to the center and use it to support pawns and restrict the enemy king. In king and pawn endgames, use your king to help your pawns advance; opposition and key squares decide who wins. When you have an extra queen or rook, know how to checkmate: with a queen, shrink the board and drive the king to the edge; with a rook, cut off ranks and files and use your king to help. Practise these ideas and you will be able to convert a winning position into a full point.',
+      fen: '4k3/8/8/4K3/4P3/8/8/8 w - - 0 1',
+      interactive: false,
+      fillSquares: ['e5', 'e4'],
+    },
+  ],
+}
+
+export default lessonEndgameBasics

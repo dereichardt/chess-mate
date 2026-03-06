@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design system: single source of truth. See DESIGN.md and tailwind.config.js. */
+:root {
+  --font-sans: Inter, system-ui, sans-serif;
+  --line-height-base: 1.5;
+  --color-primary: #243b53;
+  --color-accent: #e86c0b;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-success: #059669;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+  --radius-card: 0.5rem;
+  --radius-button: 0.375rem;
+  --radius-input: 0.375rem;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+html {
+  font-family: var(--font-sans);
+  line-height: var(--line-height-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--color-text);
+}
