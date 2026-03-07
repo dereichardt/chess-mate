@@ -26,6 +26,18 @@ const lessonDefendingUnderAttack: SharedLesson = {
       challenge: { from: 'b1', to: 'c3' },
     },
     {
+      title: 'Defend, Then Recapture',
+      text: 'First **defend** the knight on f2 by playing Nc3. Black may still take the pawn with **Bxf2+**. Then find White\'s recapture: **Kxf2** to keep the position equal.',
+      narrationText:
+        'First defend the knight on f2 by playing Nc3. Black may still take the pawn with Bxf2 plus. Then find White\'s recapture: Kxf2 to keep the position equal.',
+      fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/4P3/8/PPPP1NPP/RNBQKB1R w KQkq - 4 3',
+      interactive: true,
+      challengeSequence: [
+        { from: 'b1', to: 'c3', response: { from: 'c5', to: 'f2' } },
+        { from: 'e1', to: 'f2' },
+      ],
+    },
+    {
       title: 'Summary',
       text: 'When your piece is under attack, think: **move, defend, block, or counter-attack**. Often the best choice is clear — move to safety or add a defender. Blocking works when the attacker is a bishop, rook, or queen on a long line. Counter-attacking is strong when you can threaten something more valuable. Combine this with CCA when it is your turn to move.',
       narrationText:

@@ -1,0 +1,15 @@
+---
+description: When adding or editing interactive challenge steps in lessons, define them with FEN and challenge/challengeSequence; no separate design docs.
+globs: shared/lessons/**/*.ts
+alwaysApply: false
+---
+
+# Lesson interactive challenges
+
+When creating or editing steps in `shared/lessons/` that are **interactive challenges** (`challenge` or `challengeSequence`):
+
+- **Define in the lesson file.** Interactive challenges are described by **FEN positions** plus `challenge` or `challengeSequence` (and optional `postChallenge`) directly in the lesson. There are no separate design documents.
+- **Verify.** Confirm the FEN and every move are legal (e.g. on [lichess.org/analysis](https://lichess.org/analysis)); if multiple moves are correct, use `challenge: [move1, move2]`.
+- **Validate and play-through.** Run `npm run validate:lessons` and complete the challenge as a learner.
+
+See [LESSON_AUTHORING.md — Interactive Challenges](LESSON_AUTHORING.md#interactive-challenges) and [Describing interactive challenges](LESSON_AUTHORING.md#describing-interactive-challenges).

@@ -73,10 +73,6 @@ const lessonEndgameBasics: SharedLesson = {
         { from: 'a7', to: 'g7' },
         { from: 'a7', to: 'a8' },
         { from: 'a7', to: 'b8' },
-        { from: 'a7', to: 'c8' },
-        { from: 'a7', to: 'd8' },
-        { from: 'a7', to: 'e8' },
-        { from: 'a7', to: 'f8' },
       ],
     },
     {

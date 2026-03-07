@@ -68,6 +68,9 @@ npm run prisma:generate
 # Run database migrations
 npm run prisma:migrate
 
+# Seed lesson rows (required for progress tracking on all lessons, including 7–12)
+npm run db:seed
+
 # (Optional) Open Prisma Studio to view database
 npm run prisma:studio
 ```
@@ -166,6 +169,8 @@ chess-mate/
 - `npm start` - Start production server
 - `npm run prisma:generate` - Generate Prisma Client
 - `npm run prisma:migrate` - Run database migrations
+- `npm run db:seed` - Seed lesson rows (required for progress to be saved for all lessons)
+- `npm run db:validate-lessons` - Check that all lesson IDs exist in the database
 - `npm run prisma:studio` - Open Prisma Studio (database GUI)
 
 ### Frontend
@@ -229,6 +234,14 @@ FRONTEND_URL=http://localhost:3000
 ### Prisma Issues
 - Run `npm run prisma:generate` after schema changes
 - Run `npm run prisma:migrate` to apply migrations
+
+### Progress lost on refresh (lessons 7–12)
+If your progress for lessons 7–12 disappears when you refresh, the **Lesson** table is likely missing those rows. Progress is stored per lesson and requires a matching row in the database.
+
+1. From the **backend** directory run: `npm run db:seed`
+2. To confirm all lessons exist: `npm run db:validate-lessons`
+
+After seeding, sign in again and your progress for those lessons will persist.
 
 ## Contributing
 

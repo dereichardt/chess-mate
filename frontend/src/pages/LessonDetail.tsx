@@ -103,6 +103,7 @@ export default function LessonDetail() {
   const [lastSolvedResult, setLastSolvedResult] = useState<{
     fen: string;
     movedFrom: string;
+    movedTo?: string;
     arrows?: [string, string, string][];
     captureSquares?: string[];
   } | null>(null);
@@ -256,13 +257,15 @@ export default function LessonDetail() {
 
   const isFirst = safeStepIndex === 0;
   const isLast = safeStepIndex === totalSteps - 1;
-  // Challenge steps block forward navigation until the correct move is found.
-  const isNextBlocked = step ? !!step.challenge && challengeState !== 'solved' : false;
+  const hasChallenge = step?.challenge != null;
+  const hasChallengeSequence = step?.challengeSequence != null && step.challengeSequence.length > 0;
+  // Challenge steps (single-move or multi-move sequence) block forward navigation until complete.
+  const isNextBlocked = step ? (hasChallenge || hasChallengeSequence) && challengeState !== 'solved' : false;
   // Click-to-select + legal move dots for interactive steps (lessons 2+; reusable for puzzles/opening study).
   const showClickToSelectLegalMoves =
     lesson.number >= 2 &&
     (step?.interactive ?? false) &&
-    !(step?.challenge && challengeState === 'solved');
+    !((hasChallenge || hasChallengeSequence) && challengeState === 'solved');
 
   if (totalSteps === 0 || !step) {
     return (
@@ -304,12 +307,20 @@ export default function LessonDetail() {
     setLastSolvedResult(null);
   };
 
+  const handleResetChallenge = () => {
+    clearResetTimeout();
+    setChallengeState('idle');
+    setLastSolvedResult(null);
+    setBoardKey((k) => k + 1);
+  };
+
   const handleChallengeResult = useCallback(
     (
       solved: boolean,
       result?: {
         fen: string;
         movedFrom: string;
+        movedTo?: string;
         arrows?: [string, string, string][];
         captureSquares?: string[];
       },
@@ -432,34 +443,41 @@ export default function LessonDetail() {
         <div className="lg:col-span-3 flex items-start justify-center">
           <div className="w-full max-w-[560px] relative">
             <ChessBoard
-              key={`${safeStepIndex}-${boardKey}-${challengeState}`}
+              key={`${safeStepIndex}-${boardKey}`}
               fen={
-                (challengeState === 'solved' && (step.postChallenge?.fen ?? lastSolvedResult?.fen))
-                  ? (step.postChallenge?.fen ?? lastSolvedResult?.fen ?? step.fen)
+                (challengeState === 'solved' && (lastSolvedResult?.fen ?? step.postChallenge?.fen))
+                  ? (lastSolvedResult?.fen ?? step.postChallenge?.fen ?? step.fen)
                   : step.fen
               }
               highlightSquares={step.postChallenge && challengeState === 'solved' ? step.postChallenge.highlightSquares : step.highlightSquares}
               captureSquares={
                 challengeState === 'solved'
-                  ? (step.postChallenge?.captureSquares ?? lastSolvedResult?.captureSquares ?? step.captureSquares)
+                  ? (lastSolvedResult?.captureSquares ?? step.postChallenge?.captureSquares ?? step.captureSquares)
                   : step.captureSquares
               }
-              fillSquares={step.postChallenge && challengeState === 'solved' ? step.postChallenge.fillSquares : step.fillSquares}
+              fillSquares={
+                challengeState === 'solved' && lastSolvedResult?.movedTo
+                  ? [lastSolvedResult.movedTo, ...(lastSolvedResult.captureSquares ?? [])]
+                  : step.postChallenge && challengeState === 'solved'
+                    ? step.postChallenge.fillSquares
+                    : step.fillSquares
+              }
               arrows={
                 challengeState === 'solved'
-                  ? (step.postChallenge?.arrows ?? lastSolvedResult?.arrows ?? step.arrows)
+                  ? (lastSolvedResult?.arrows ?? step.postChallenge?.arrows ?? step.arrows)
                   : step.arrows
               }
               movedFromSquare={
-                challengeState === 'solved' ? (step.postChallenge?.movedFrom ?? lastSolvedResult?.movedFrom) : undefined
+                challengeState === 'solved' ? (lastSolvedResult?.movedFrom ?? step.postChallenge?.movedFrom) : undefined
               }
-              correctMove={step.challenge}
+              correctMove={hasChallengeSequence ? undefined : step.challenge}
+              challengeSequence={step.challengeSequence}
               onChallengeResult={handleChallengeResult}
-              interactive={step.interactive !== false && !(step.challenge && challengeState === 'solved')}
+              interactive={step.interactive !== false && !((hasChallenge || hasChallengeSequence) && challengeState === 'solved')}
               showClickToSelectLegalMoves={showClickToSelectLegalMoves}
             />
             {/* Board-area callout: correct/wrong feedback anchored to board */}
-            {step.challenge && (challengeState === 'solved' || challengeState === 'failed') && (
+            {(hasChallenge || hasChallengeSequence) && (challengeState === 'solved' || challengeState === 'failed') && (
               <div
                 className={`absolute bottom-2 left-1/2 -translate-x-1/2 z-10 px-3 py-2 rounded-lg shadow-elevated text-sm font-semibold flex items-center gap-2 ${
                   challengeState === 'solved'
@@ -500,7 +518,7 @@ export default function LessonDetail() {
           >
             {/* Step-type label inside card, above title */}
             <div className="mb-3">
-              {step.challenge ? (
+              {(hasChallenge || hasChallengeSequence) ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-100 text-primary-700 text-xs font-semibold border border-primary-200">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
@@ -542,12 +560,14 @@ export default function LessonDetail() {
             </div>
 
             {/* Interactive indicator (challenge steps) — just above narration so both sit at bottom of card */}
-            {step.challenge && (
+            {(hasChallenge || hasChallengeSequence) && (
               <div className="mt-4 pt-4 border-t border-border flex items-center gap-2.5 text-sm font-medium text-primary-700">
                 <svg className="w-4 h-4 shrink-0 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                Find the move — drag the right piece.
+                {hasChallengeSequence
+                  ? `Find the move — complete the sequence (${step.challengeSequence!.length} move${step.challengeSequence!.length === 1 ? '' : 's'}).`
+                  : 'Find the move — drag the right piece.'}
               </div>
             )}
 
@@ -569,6 +589,22 @@ export default function LessonDetail() {
               </svg>
               Previous
             </button>
+
+            {lesson?.id === 'checks-captures-attacks' &&
+              (safeStepIndex === 4 || safeStepIndex === 5 || safeStepIndex === 6) &&
+              challengeState === 'solved' && (
+              <button
+                onClick={handleResetChallenge}
+                type="button"
+                className="flex items-center gap-2 px-4 py-2 rounded-button text-sm font-semibold text-primary-700 border border-primary-200 hover:bg-primary-50 transition-colors"
+                aria-label="Reset challenge"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset
+              </button>
+            )}
 
             {isLast ? (
               <button

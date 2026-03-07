@@ -12,9 +12,9 @@ const lessonSimpleCheckmatePatterns: SharedLesson = {
       text: 'With a queen and your king, you can checkmate the enemy king by **pushing it to the edge**. The queen controls rows and diagonals; you use it to take away squares from the enemy king while your own king helps. Step by step, the enemy king is "boxed" until it is on the back rank with no escape — then you deliver checkmate.\n\nHere White can give checkmate in one. The black king on h8 has no escape. Find **Qh7#**.',
       narrationText:
         'With a queen and your king, you checkmate by pushing the enemy king to the edge. Here White can give checkmate in one. The black king on h8 has no escape. Find Qh7 checkmate.',
-      fen: '7k/8/8/8/8/8/5Q2/4K3 w - - 0 1',
+      fen: '7k/8/8/8/8/3Q4/8/4K3 w - - 0 1',
       interactive: true,
-      challenge: { from: 'f2', to: 'h7' },
+      challenge: { from: 'd3', to: 'h7' },
     },
     {
       title: 'Checkmate in One',

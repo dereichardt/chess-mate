@@ -12,6 +12,11 @@ export interface PostChallengeVisuals {
   arrows?: [string, string, string?][]
 }
 
+/** One step in a multi-move challenge: user move, optionally followed by a fixed opponent response. */
+export type ChallengeSequenceStep =
+  | { from: string; to: string }
+  | { from: string; to: string; response: { from: string; to: string } }
+
 export interface SharedLessonStep {
   title: string
   text: string
@@ -22,7 +27,16 @@ export interface SharedLessonStep {
   captureSquares?: string[]
   fillSquares?: string[]
   arrows?: [string, string, string?][]
+  /**
+   * One-move challenge: required move (or any of the moves if array).
+   * Use for single-move "find the move" steps. Ignored when challengeSequence is set.
+   */
   challenge?: { from: string; to: string } | { from: string; to: string }[]
+  /**
+   * Multi-move challenge: sequence of user moves with optional opponent responses between them.
+   * When set, the step is complete only after the full sequence is played correctly.
+   */
+  challengeSequence?: ChallengeSequenceStep[]
   postChallenge?: PostChallengeVisuals
   interactive?: boolean
 }

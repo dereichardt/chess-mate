@@ -1,6 +1,6 @@
 # Lesson Authoring Guide
 
-This guide covers everything you need to write lesson content for Chess-Mate. All lessons live in `frontend/src/data/lessons.ts` — there is no backend CMS.
+This guide covers everything you need to write lesson content for Chess-Mate. Lessons are authored in `shared/lessons/` (TypeScript); the frontend and backend use this as the single source of truth. There is no backend CMS.
 
 ---
 
@@ -59,8 +59,10 @@ interface LessonStep {
   captureSquares?: string[]    // Softer green dots (capture squares).
   fillSquares?: string[]       // Yellow-tinted full-square highlight (educational emphasis).
   arrows?: [string, string, string?][]  // Visual arrows — see Arrows section.
-  challenge?: { from: string; to: string }  // Required move the user must play.
-  interactive?: boolean     // Enable drag-and-drop. Required when challenge is set.
+  challenge?: { from: string; to: string } | { from: string; to: string }[]  // One required move (or alternatives). Ignored when challengeSequence is set.
+  challengeSequence?: ChallengeSequenceStep[]  // Multi-move challenge: user plays a sequence, with optional opponent responses. See Interactive Challenges.
+  postChallenge?: PostChallengeVisuals
+  interactive?: boolean     // Enable drag-and-drop. Required when challenge or challengeSequence is set.
 }
 ```
 
@@ -214,11 +216,11 @@ The chess board component handles knight moves specially — it renders them as 
 
 ## Interactive Challenges
 
-A challenge step asks the user to drag and drop the correct piece. It validates the move and calls `onChallengeComplete()` when correct.
+Challenge steps ask the user to find and play the correct move(s). Use **one-move** challenges for Learn the Basics and for simple "find the move" practice. Use **multi-move** (`challengeSequence`) for Beginner lessons and beyond when the idea is best taught over two or more moves (e.g. attack then capture, or defend then recapture).
 
-### Requirements
+### One-move challenge
 
-Both `interactive: true` and `challenge` must be set together:
+Both `interactive: true` and `challenge` must be set. When `challengeSequence` is not set, the step is complete after a single correct move.
 
 ```ts
 {
@@ -230,18 +232,42 @@ Both `interactive: true` and `challenge` must be set together:
 }
 ```
 
+You can also pass an **array** of moves to accept any of them as correct: `challenge: [{ from: 'a', to: 'b' }, { from: 'c', to: 'd' }]`.
+
+### Multi-move challenge (challengeSequence)
+
+For **Beginner** and later sections, use `challengeSequence` when the step requires two or more user moves, with optional opponent replies in between. The user must play the full sequence correctly; on a wrong move the board resets to the start of the sequence.
+
+Each element is either a user move `{ from, to }` or a user move plus a fixed opponent response `{ from, to, response: { from, to } }`:
+
+```ts
+{
+  title: 'Attack, Then Capture',
+  text: 'First find the attack on the knight. After Black moves the king, play the capture.',
+  fen: '7k/8/8/4n3/8/8/1B6/4K3 w - - 0 1',
+  interactive: true,
+  challengeSequence: [
+    { from: 'b2', to: 'd4', response: { from: 'h8', to: 'g8' } },  // User: Bd4. Black: Kg8.
+    { from: 'd4', to: 'e5' },   // User: Bxe5.
+  ],
+  postChallenge: { fen: '6k1/8/8/4B3/8/8/8/4K3 b - - 0 2', movedFrom: 'd4' },
+}
+```
+
+- **When to use 2-move (or N-move):** Where the pedagogy clearly benefits — e.g. "Play the attack; after Black's reply find the capture" (CCA), or "Defend, then after they take find the recapture" (Defending). Not every challenge needs to be multi-move.
+- **Validation:** The script checks that every user move and every `response` is legal from the resulting position. If `postChallenge.fen` is set, it must match the final position after the full sequence (position + turn).
+
 ### Rules for challenge steps
 
-- **Verify the move is legal** in the given FEN before writing the challenge. Test on [lichess.org/analysis](https://lichess.org/analysis).
-- The `from` square must have a piece in the FEN. The `to` square is the destination.
-- Only one move is validated — the exact `from` → `to` pair.
-- Do not add `highlightSquares` or arrows to challenge steps — the user should have to find the answer themselves.
-- The text should describe *what outcome to achieve* ("attack both pieces") not *where to move* ("move to e5"). The challenge is a puzzle, not a guided click.
+- **Verify every move is legal** in the given FEN (and after each prior move in a sequence). Test on [lichess.org/analysis](https://lichess.org/analysis).
+- The `from` square must have a piece; `to` is the destination.
+- Do not add `highlightSquares` or arrows to challenge steps — the user should find the answer.
+- The text should describe *what to achieve* ("attack both pieces", "complete the sequence") not the exact squares.
 
 ### Challenge step placement
 
 - Always precede a challenge step with an explanatory step that teaches the pattern first.
-- Challenge steps work well as the last step of a conceptual block, or as a lesson's final step.
+- Use one-move challenges for Learn the Basics (lessons 1–6). Use two-move (or more) where it fits in Beginner (7–12) and Advanced Beginner / Early Intermediate (13+).
 
 ---
 
@@ -275,12 +301,34 @@ End concept steps with a sentence that explicitly connects the text to the board
 
 ---
 
+## Concept–content alignment
+
+To avoid rework, ensure the board, challenge, and text all support the same learning goal.
+
+### Lesson design workflow
+
+Before writing FEN or challenge text:
+
+1. **Define the lesson’s learning objective** in one sentence (e.g. "Learner can apply CCA: look for checks, then captures, then attacks").
+2. **List the concepts** the lesson must teach (e.g. Check, Capture, Attack as three concepts).
+3. **For each concept:** decide whether it gets a theory-only step, a challenge step, or both. Ensure every concept in the title/description has at least one step that teaches it and, where appropriate, one that tests it (challenge).
+
+This prevents gaps where a concept appears in the lesson name but has no teaching or practice step.
+
+### Alignment checks
+
+- **Setup vs narrative:** For every step, the board (FEN + highlights/arrows) matches what the text describes (e.g. "the bishop on g5" → the bishop is on g5 in the FEN).
+- **Challenge vs concept:** For every challenge step, the correct move(s) actually demonstrate the stated concept (e.g. "Find the block" → the challenge move is a block; "Deliver checkmate" → the challenge move gives checkmate).
+- **Play-through:** Play through the lesson as a learner: complete every challenge, read every step. Confirm no step is uncompletable or confusing.
+
+---
+
 ## Adding a New Lesson
 
-1. Open `frontend/src/data/lessons.ts`
-2. Add a new object to the `lessons` array **in order** — do not skip `number` values
-3. Replace the "Coming Soon" stub if one exists for that lesson number
-4. Use the checklist below before considering it done
+1. Add a new lesson file under `shared/lessons/` (e.g. `lesson-my-topic.ts`) and export it from `shared/lessons/index.ts`, or edit an existing lesson file.
+2. Keep lessons in order: do not skip `number` values.
+3. Replace the "Coming Soon" stub if one exists for that lesson number.
+4. Use the checklist below before considering it done.
 
 ```ts
 // Replace this stub:
@@ -313,6 +361,12 @@ End concept steps with a sentence that explicitly connects the text to the board
 ```
 
 **Important:** Never change a lesson's `id` after it has been published. The `id` is used as the URL slug and as the key in `progressStore`. Changing it breaks existing user progress records.
+
+---
+
+## Describing interactive challenges
+
+Interactive lessons and challenges are described **directly in the lesson file** using FEN positions plus `challenge` or `challengeSequence` (and optional `postChallenge`). There are no separate design documents. When adding or changing an interactive step, provide the FEN for the position and the correct move(s); verify the FEN and moves on [lichess.org/analysis](https://lichess.org/analysis), then run `npm run validate:lessons` and play through as a learner.
 
 ---
 
@@ -371,12 +425,16 @@ End concept steps with a sentence that explicitly connects the text to the board
 
 Before committing a new or updated lesson:
 
+- [ ] **Run `npm run validate:lessons`** (from repo root) and fix any errors. The script checks FEN load, challenge move legality, square names, postChallenge.fen, and (for `challengeSequence`) that every user move and response is legal and that postChallenge.fen matches the final position when set.
 - [ ] All FEN strings verified on [lichess.org/analysis](https://lichess.org/analysis)
 - [ ] Lesson `id` is kebab-case and unique
 - [ ] `number` is sequential with no gaps
 - [ ] Each step has one focused concept
-- [ ] Challenge `from` squares have a piece in the corresponding FEN
+- [ ] Challenge / challengeSequence `from` squares have a piece in the corresponding FEN
 - [ ] Challenge steps do not include highlights or arrows (keep them as puzzles)
+- [ ] **Setup vs narrative:** For every step, the board (FEN + highlights/arrows) matches what the text describes.
+- [ ] **Challenge vs concept:** For every challenge step, the correct move(s) demonstrate the stated concept (e.g. "Find the block" → the move is a block).
+- [ ] **Play-through:** You have played through the lesson as a learner and completed every challenge.
 - [ ] Text paragraphs separated with `\n\n`
 - [ ] Bold (`**term**`) used for key chess terms
 - [ ] Concept steps end with a sentence pointing to the board

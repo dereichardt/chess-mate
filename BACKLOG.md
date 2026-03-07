@@ -25,6 +25,7 @@ A curriculum of **6 lessons** for players who have completed **New to Chess** (l
 
 - **Lesson IDs / slugs**: `checks-captures-attacks`, `piece-values-exchanges`, `seeing-opponent-threats`, `defending-under-attack`, `simple-checkmate-patterns`, `thinking-routine`. Add to shared lessons, backend lesson list, and Prisma seed. These lessons are **free** (no paywall).
 - **Order**: Lesson numbers 7–12. Advanced Beginner becomes 13–18; Early Intermediate 19–24.
+- **Piece Values & Simple Exchanges (interactive):** The interactive step should be an **automated exchange**: the exchange plays out automatically (no move input from the user), and the user has to **choose the value of the exchange from a multiple-choice answer** (e.g. “Who wins material?” or “What is the result of this trade?”).
 
 ---
 
@@ -87,8 +88,11 @@ A second paid curriculum of **6 lessons** for **early intermediate** players who
 
 ## Future features
 
+- **Smoother login experience** — After login, data coming back from the database (e.g. username, profile icon in the top right, lesson progress/status) currently loads one at a time, and it is not clear when the database read is complete. Implement a clearer loading state and/or coordinate post-login data fetching so the UI updates in a single, predictable step (e.g. show a short “Loading…” until user + progress are ready, then reveal header and content together).
 - **Study Openings** — Build out the openings study feature (currently a placeholder page).
 - **Solve Puzzles** — Build out the puzzle-solving feature (route and backend exist; UI not yet built).
+- **Training (new side menu item)** — Add a **Training** item to the sidebar (alongside Home, Learn the Basics, Study Openings, Solve Puzzles). Training is a dedicated area for drills and exercises that improve board vision and motor skills.
+  - **Vision and coordination exercise** — An exercise (or set of exercises) that trains board vision and hand–eye coordination: e.g. tap/click the correct square when prompted (e.g. “e4”, “light square”, “same diagonal as the king”), drag a piece to a target square under time or repetition, or similar. Can start as a single exercise and expand (difficulty levels, more prompt types). Implementation: new route (e.g. `/training`), sidebar entry, and exercise UI; optional progress or settings stored per user.
 
 ---
 

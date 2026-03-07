@@ -7,7 +7,7 @@ const lessonChecksCapturesAttacks: SharedLesson = {
   title: 'Checks, Captures, Attacks',
   description:
     'A simple method to find good moves every turn: look for checks, then captures, then attacks.',
-  duration: '8 min',
+  duration: '12 min',
   steps: [
     {
       title: 'Introduction',
@@ -40,20 +40,70 @@ const lessonChecksCapturesAttacks: SharedLesson = {
       arrows: [['f3', 'e5', 'rgba(34,197,94,0.85)']],
     },
     {
-      // TODO: Revisit — consider an interactive challenge that emphasises the A (Attack/threat), e.g. find a move that creates a threat rather than a check or capture.
-      title: 'Find the Best Move',
-      text: 'White to move. Use CCA: is there a check? A capture? An attack?\n\nThe black queen on d8 is undefended. Find the white move that captures it: **Qxd8**. (After you take, you even give check — so Black cannot recapture.)',
+      title: 'Then Attacks (Threats)',
+      text: 'If there is no winning check or capture, look for **attacks** — moves that create **threats**. An attack can mean moving a piece so it attacks an enemy piece (especially one that is undefended). Your opponent then has to deal with the threat; next move you may capture or win material.\n\nHere White has played **Bd4**, attacking the black knight on e5. The knight is undefended — nothing guards it. Next move White can play **Bxe5**, winning the knight for nothing. The attack was the first step of a simple tactic.',
       narrationText:
-        'White to move. Use CCA: is there a check? A capture? An attack? The black queen on d8 is undefended. Find the white move that captures it: Q takes d8. After you take, you even give check, so Black cannot recapture.',
-      fen: '3q2k1/3Q4/8/8/8/8/8/4K3 w - - 0 1',
+        'If there is no winning check or capture, look for attacks — moves that create threats. An attack can mean moving a piece so it attacks an enemy piece, especially one that is undefended. Your opponent then has to deal with the threat; next move you may capture or win material.\n\nHere White has played Bd4, attacking the black knight on e5. The knight is undefended — nothing guards it. Next move White can play B takes e5, winning the knight for nothing. The attack was the first step of a simple tactic.',
+      fen: '7k/8/8/4n3/3B4/8/8/4K3 w - - 0 1',
+      interactive: false,
+      fillSquares: ['d4', 'e5'],
+      arrows: [['d4', 'e5', 'rgba(34,197,94,0.85)']],
+    },
+    {
+      title: 'Find the Check',
+      text: 'White to move. Use CCA: **first** look for checks. Black\'s king is stuck on the back rank.\n\nFind the two-move sequence that delivers check-mate. Focus on finding check during each move.',
+      narrationText:
+        'White to move. Use CCA: first look for checks. Black\'s king is stuck on the back rank. Find the two-move sequence that delivers check-mate. Focus on finding check during each move.',
+      fen: '6k1/2qb1ppp/p2p4/1pp5/8/4Q3/PP4PP/4R1K1 w - - 0 1',
       interactive: true,
-      challenge: { from: 'd7', to: 'd8' },
+      challengeSequence: [
+        { from: 'e3', to: 'e8', response: { from: 'd7', to: 'e8' } },
+        { from: 'e1', to: 'e8' },
+      ],
+      postChallenge: {
+        fen: '4R1k1/2q2ppp/p2p4/1pp5/8/8/PP4PP/6K1 b - - 0 2',
+        movedFrom: 'e1',
+        fillSquares: ['e8'],
+      },
+    },
+    {
+      title: 'Find the Capture',
+      text: 'No winning check here — so next in CCA we look for **captures**. Can White capture something and gain material?\n\n**Black has a pawn on d5 that White can capture.** Find the move that wins the pawn.',
+      narrationText:
+        'No winning check here — so next in CCA we look for captures. Can White capture something and gain material? Black has a pawn on d5 that White can capture. Find the move that wins the pawn.',
+      fen: 'r1bq1rk1/ppp2ppp/2n2n2/2bpp3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - d6 0 7',
+      interactive: true,
+      challenge: { from: 'e4', to: 'd5' },
+      postChallenge: {
+        fen: 'r1bq1rk1/ppp2ppp/2n2n2/2bPp3/2B5/2NP1N2/PPP2PPP/R1BQ1RK1 b - - 0 7',
+        movedFrom: 'e4',
+        fillSquares: ['d5'],
+        arrows: [['d5', 'c6', 'rgba(34,197,94,0.85)']],
+      },
+    },
+    {
+      title: 'Find the Attack',
+      text: 'No winning check, no winning capture — so we look for **attacks**. Find the move that creates a threat by attacking an undefended black piece. Next move you would capture it.',
+      narrationText:
+        'No winning check, no winning capture — so we look for attacks. Find the move that creates a threat by attacking an undefended black piece. Next move you would capture it.',
+      fen: '6k1/1p3p2/6p1/1P1n3p/P7/3N3P/5PP1/3B2K1 w - - 0 1',
+      interactive: true,
+      challenge: [
+        { from: 'd1', to: 'b3' },
+        { from: 'd1', to: 'f3' },
+      ],
+      postChallenge: {
+        fen: '6k1/1p3p2/6p1/1P1n3p/P7/1B1N3P/5PP1/6K1 b - - 1 1',
+        movedFrom: 'd1',
+        fillSquares: ['b3', 'd5'],
+        arrows: [['b3', 'd5', 'rgba(34,197,94,0.85)']],
+      },
     },
     {
       title: 'Summary',
-      text: 'On every turn, use **Checks, Captures, Attacks**:\n\n1. **Checks** — Do I have a check? It forces a reply.\n2. **Captures** — Can I capture something? Is it safe? Do I gain material?\n3. **Attacks** — What threats can I create? What do I attack?\n\nThis order helps you not miss simple tactics. In the next lessons you will add piece values, defence, and a full thinking routine.',
+      text: 'On every turn, use **Checks, Captures, Attacks**:\n\n1. **Checks** — Do I have a check? It forces a reply.\n2. **Captures** — Can I capture something? Is it safe? Do I gain material?\n3. **Attacks** — What threats can I create? What do I attack?\n\nYou have practiced finding a check, a capture, and an attack — use this order every turn so you do not miss simple tactics. In the next lessons you will add piece values, defence, and a full thinking routine.',
       narrationText:
-        'On every turn, use Checks, Captures, Attacks. One: Checks — do I have a check? It forces a reply. Two: Captures — can I capture something? Is it safe? Do I gain material? Three: Attacks — what threats can I create? This order helps you not miss simple tactics.',
+        'On every turn, use Checks, Captures, Attacks. One: Checks — do I have a check? It forces a reply. Two: Captures — can I capture something? Is it safe? Do I gain material? Three: Attacks — what threats can I create? You have practiced finding a check, a capture, and an attack — use this order every turn so you do not miss simple tactics.',
       fen: STARTING_FEN,
       interactive: false,
     },

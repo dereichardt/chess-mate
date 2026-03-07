@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess, type Square } from 'chess.js';
+import type { ChallengeSequenceStep } from '../../data/lessons';
 
 // Cburnett piece set — SVGs served from /public/pieces/cburnett/.
 // Each piece must be a named function component; arrow functions in a map
@@ -46,7 +47,10 @@ interface ChessBoardProps {
   arrows?: [string, string, string?][];
   /** Optional square to show as light green "moved from" (e.g. after a challenge, when showing postChallenge visuals). */
   movedFromSquare?: string;
+  /** Single-move challenge: one required move (or any of the array). Ignored when challengeSequence is set. */
   correctMove?: { from: string; to: string } | { from: string; to: string }[];
+  /** Multi-move challenge: sequence of user moves with optional opponent responses. When set, step completes only after full sequence. */
+  challengeSequence?: ChallengeSequenceStep[];
   onChallengeResult?: (
     solved: boolean,
     result?: { fen: string; movedFrom: string; movedTo: string; arrows: [string, string, string][]; captureSquares: string[] }
@@ -166,12 +170,22 @@ export default function ChessBoard({
   arrows = [],
   movedFromSquare,
   correctMove,
+  challengeSequence,
   onChallengeResult,
   interactive = true,
   showClickToSelectLegalMoves = false,
 }: ChessBoardProps) {
   const [prevFen, setPrevFen] = useState(fen);
   const [currentFen, setCurrentFen] = useState(fen);
+  /** Index into challengeSequence when in multi-move challenge mode. */
+  const [sequenceIndex, setSequenceIndex] = useState(0);
+  /** When set, we are showing "after White's move" and will apply Black's response after a short delay. */
+  const [pendingBlackResponse, setPendingBlackResponse] = useState<{
+    afterWhiteFen: string;
+    response: { from: string; to: string };
+    nextSequenceIndex: number;
+  } | null>(null);
+  const blackResponseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Lesson-defined move-destination squares — shown as green dots.
   const [activeHighlights, setActiveHighlights] = useState<string[]>(highlightSquares);
   // Legal-move dots populated after the user drops a piece (exploration / lesson-1).
@@ -182,40 +196,77 @@ export default function ChessBoard({
   // Arrows drawn after a challenge move to show attacked enemy pieces.
   const [postMoveArrows, setPostMoveArrows] = useState<[string, string, string][]>([]);
   const [lastMovedFrom, setLastMovedFrom] = useState<string | null>(null);
+  const [lastMovedTo, setLastMovedTo] = useState<string | null>(null);
 
   // Click-to-select state (lessons 2–6 and future puzzle/study modes).
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [clickSelectCaptures, setClickSelectCaptures] = useState<string[]>([]);
   const [clickSelectNonCaptures, setClickSelectNonCaptures] = useState<string[]>([]);
 
+  const isSequenceMode = challengeSequence != null && challengeSequence.length > 0;
+
   // Derived-state pattern: update synchronously during render when the step
   // changes so there is never an intermediate paint with the old position.
   // (useEffect fires after paint and causes a visible flash.)
   if (prevFen !== fen) {
+    if (blackResponseTimeoutRef.current) {
+      clearTimeout(blackResponseTimeoutRef.current);
+      blackResponseTimeoutRef.current = null;
+    }
+    setPendingBlackResponse(null);
     setPrevFen(fen);
     setCurrentFen(fen);
+    setSequenceIndex(0);
     setActiveHighlights(highlightSquares);
     setLegalSquares([]);
     setActiveCaptureSquares(captureSquares);
     setActiveFillSquares(fillSquares);
     setPostMoveArrows([]);
     setLastMovedFrom(null);
+    setLastMovedTo(null);
     setSelectedSquare(null);
     setClickSelectCaptures([]);
     setClickSelectNonCaptures([]);
   }
 
+  // After user (White) plays in a sequence challenge, show the position then play Black's move after a short delay.
+  useEffect(() => {
+    if (!pendingBlackResponse) return;
+    blackResponseTimeoutRef.current = setTimeout(() => {
+      blackResponseTimeoutRef.current = null;
+      const { afterWhiteFen, response: resp, nextSequenceIndex } = pendingBlackResponse;
+      const gameAfterUser = makeGame(afterWhiteFen);
+      const responseMove = gameAfterUser.move({ from: resp.from, to: resp.to });
+      if (responseMove) {
+        setCurrentFen(gameAfterUser.fen());
+        setLastMovedFrom(resp.from);
+        setLastMovedTo(resp.to);
+        setPostMoveArrows([]);
+      }
+      setSequenceIndex(nextSequenceIndex);
+      setPendingBlackResponse(null);
+    }, 700);
+    return () => {
+      if (blackResponseTimeoutRef.current) {
+        clearTimeout(blackResponseTimeoutRef.current);
+        blackResponseTimeoutRef.current = null;
+      }
+    };
+  }, [pendingBlackResponse]);
+
   // Always render currentFen so the board holds its position when interactive
   // is turned off after a correct challenge move. Static steps are safe because
   // arePiecesDraggable/onPieceDrop guards prevent currentFen from ever changing.
   const resolvedFen = currentFen;
-  const isExploration = interactive && !correctMove;
+  const isExploration = interactive && !correctMove && !isSequenceMode;
 
   const squareStyles: Record<string, React.CSSProperties> = {};
 
-  // Yellow: lesson explanation / key squares (fill + highlight).
+  // Interactive challenge result: move-from and move-to in same green; otherwise yellow for explanation squares.
+  const fillColor =
+    movedFromSquare != null ? SQUARE_COLORS.lightGreenMovedFrom : SQUARE_COLORS.yellowExplanation;
   for (const sq of activeFillSquares) {
-    squareStyles[sq] = { backgroundColor: SQUARE_COLORS.yellowExplanation };
+    squareStyles[sq] = { backgroundColor: fillColor };
   }
   // In exploration mode, possible-move squares are green; otherwise yellow.
   const highlightColor = isExploration ? SQUARE_COLORS.greenLegal : SQUARE_COLORS.yellowExplanation;
@@ -242,17 +293,22 @@ export default function ChessBoard({
     squareStyles[selectedSquare] = { backgroundColor: SQUARE_COLORS.selectedPiece };
   }
 
-  // Light green: square the piece moved from (highest priority — applied last).
+  // Light green: square the piece moved from and the square it moved to.
   const movedFrom = lastMovedFrom ?? movedFromSquare;
+  const movedTo = lastMovedTo;
   if (movedFrom) {
     squareStyles[movedFrom] = { backgroundColor: SQUARE_COLORS.lightGreenMovedFrom };
+  }
+  if (movedTo) {
+    squareStyles[movedTo] = { backgroundColor: SQUARE_COLORS.lightGreenMovedFrom };
   }
 
   // Reset move/selection state after a successful move. Called by all move paths.
   const applyMoveState = useCallback(
-    (explorationFen: string, _targetSquare: string, sourceSquare: string) => {
+    (explorationFen: string, targetSquare: string, sourceSquare: string) => {
       setCurrentFen(explorationFen);
       setLastMovedFrom(sourceSquare);
+      setLastMovedTo(targetSquare);
       setActiveHighlights([]);
       setActiveCaptureSquares([]);
       setSelectedSquare(null);
@@ -261,6 +317,22 @@ export default function ChessBoard({
     },
     [],
   );
+
+  // Reset board to initial step state (used when user plays wrong move in sequence mode).
+  const resetToInitial = useCallback(() => {
+    setCurrentFen(fen);
+    setSequenceIndex(0);
+    setActiveHighlights(highlightSquares);
+    setLegalSquares([]);
+    setActiveCaptureSquares(captureSquares);
+    setActiveFillSquares(fillSquares);
+    setPostMoveArrows([]);
+    setLastMovedFrom(null);
+    setLastMovedTo(null);
+    setSelectedSquare(null);
+    setClickSelectCaptures([]);
+    setClickSelectNonCaptures([]);
+  }, [fen, highlightSquares, captureSquares, fillSquares]);
 
   // Shared move-execution logic used by both drag (onDrop) and click (onSquareClick).
   const executeMoveFrom = useCallback(
@@ -280,6 +352,55 @@ export default function ChessBoard({
         const parts = game.fen().split(' ');
         parts[1] = move.color;
         const explorationFen = parts.join(' ');
+
+        if (isSequenceMode && challengeSequence) {
+          const el = challengeSequence[sequenceIndex];
+          const expectedFrom = el.from;
+          const expectedTo = el.to;
+          if (sourceSquare !== expectedFrom || targetSquare !== expectedTo) {
+            applyMoveState(explorationFen, targetSquare, sourceSquare);
+            onChallengeResult?.(false);
+            return true; // move was legal, show wrong position until parent timeout resets
+          }
+          applyMoveState(explorationFen, targetSquare, sourceSquare);
+          setLegalSquares([]);
+          const attacked = attackedEnemySquares(explorationFen, targetSquare);
+          setPostMoveArrows(
+            attacked.map((sq) => [targetSquare, sq, 'rgba(34,197,94,0.85)'] as [string, string, string]),
+          );
+          const isLastStep = sequenceIndex === challengeSequence.length - 1;
+          if (isLastStep) {
+            const kingSq = checkmatedKingSquare(explorationFen);
+            const captureSqs = kingSq ? [kingSq] : attacked;
+            setActiveCaptureSquares(captureSqs);
+            const arrowColor = 'rgba(34,197,94,0.85)';
+            const resultArrows = attacked.map((sq) => [targetSquare, sq, arrowColor] as [string, string, string]);
+            onChallengeResult?.(true, {
+              fen: explorationFen,
+              movedFrom: sourceSquare,
+              movedTo: targetSquare,
+              arrows: resultArrows,
+              captureSquares: captureSqs,
+            });
+          } else {
+            if ('response' in el && el.response) {
+              const resp = el.response;
+              // Show position after White's move (turn = Black), then play Black's move after a short delay.
+              const afterWhiteFen = game.fen();
+              setCurrentFen(afterWhiteFen);
+              setLastMovedFrom(sourceSquare);
+              setPendingBlackResponse({
+                afterWhiteFen,
+                response: resp,
+                nextSequenceIndex: sequenceIndex + 1,
+              });
+            } else {
+              setSequenceIndex((i) => i + 1);
+            }
+          }
+          onMove?.(explorationFen);
+          return true;
+        }
 
         applyMoveState(explorationFen, targetSquare, sourceSquare);
 
@@ -329,7 +450,18 @@ export default function ChessBoard({
         return false;
       }
     },
-    [resolvedFen, correctMove, showClickToSelectLegalMoves, onChallengeResult, onMove, applyMoveState],
+    [
+      resolvedFen,
+      correctMove,
+      challengeSequence,
+      isSequenceMode,
+      sequenceIndex,
+      showClickToSelectLegalMoves,
+      onChallengeResult,
+      onMove,
+      applyMoveState,
+      resetToInitial,
+    ],
   );
 
   const onPromotionPieceSelect = useCallback(
@@ -349,6 +481,54 @@ export default function ChessBoard({
         const parts = game.fen().split(' ');
         parts[1] = move.color;
         const explorationFen = parts.join(' ');
+
+        if (isSequenceMode && challengeSequence) {
+          const el = challengeSequence[sequenceIndex];
+          const expectedFrom = el.from;
+          const expectedTo = el.to;
+          if (promoteFromSquare !== expectedFrom || promoteToSquare !== expectedTo || promotion !== 'q') {
+            onChallengeResult?.(false);
+            resetToInitial();
+            return true;
+          }
+          applyMoveState(explorationFen, promoteToSquare, promoteFromSquare);
+          setLegalSquares([]);
+          const attacked = attackedEnemySquares(explorationFen, promoteToSquare);
+          setPostMoveArrows(
+            attacked.map((sq) => [promoteToSquare, sq, 'rgba(34,197,94,0.85)'] as [string, string, string]),
+          );
+          const isLastStep = sequenceIndex === challengeSequence.length - 1;
+          if (isLastStep) {
+            const kingSq = checkmatedKingSquare(explorationFen);
+            const captureSqs = kingSq ? [kingSq] : attacked;
+            setActiveCaptureSquares(captureSqs);
+            const arrowColor = 'rgba(34,197,94,0.85)';
+            const resultArrows = attacked.map((sq) => [promoteToSquare, sq, arrowColor] as [string, string, string]);
+            onChallengeResult?.(true, {
+              fen: explorationFen,
+              movedFrom: promoteFromSquare,
+              movedTo: promoteToSquare,
+              arrows: resultArrows,
+              captureSquares: captureSqs,
+            });
+          } else {
+            if ('response' in el && el.response) {
+              const resp = el.response;
+              const afterWhiteFen = game.fen();
+              setCurrentFen(afterWhiteFen);
+              setLastMovedFrom(promoteFromSquare);
+              setPendingBlackResponse({
+                afterWhiteFen,
+                response: resp,
+                nextSequenceIndex: sequenceIndex + 1,
+              });
+            } else {
+              setSequenceIndex((i) => i + 1);
+            }
+          }
+          onMove?.(explorationFen);
+          return true;
+        }
 
         if (correctMove) {
           const correctMoves = Array.isArray(correctMove) ? correctMove : [correctMove];
@@ -391,7 +571,18 @@ export default function ChessBoard({
         return false;
       }
     },
-    [resolvedFen, correctMove, showClickToSelectLegalMoves, onChallengeResult, onMove, applyMoveState],
+    [
+      resolvedFen,
+      correctMove,
+      challengeSequence,
+      isSequenceMode,
+      sequenceIndex,
+      showClickToSelectLegalMoves,
+      onChallengeResult,
+      onMove,
+      applyMoveState,
+      resetToInitial,
+    ],
   );
 
   const onDrop = useCallback(
@@ -485,10 +676,10 @@ export default function ChessBoard({
         <div style={{ position: 'relative', width: boardWidth, height: boardWidth }}>
           <Chessboard
             position={resolvedFen}
-            onPieceDrop={interactive ? onDrop : undefined}
-            onPromotionPieceSelect={interactive ? onPromotionPieceSelect : undefined}
-            onSquareClick={showClickToSelectLegalMoves && interactive ? onSquareClick : undefined}
-            arePiecesDraggable={interactive}
+            onPieceDrop={interactive && !pendingBlackResponse ? onDrop : undefined}
+            onPromotionPieceSelect={interactive && !pendingBlackResponse ? onPromotionPieceSelect : undefined}
+            onSquareClick={showClickToSelectLegalMoves && interactive && !pendingBlackResponse ? onSquareClick : undefined}
+            arePiecesDraggable={interactive && !pendingBlackResponse}
             boardWidth={boardWidth}
             animationDuration={0}
             customSquareStyles={squareStyles}

@@ -1,0 +1,12 @@
+{
+  "name": "chess-mate",
+  "private": true,
+  "scripts": {
+    "validate:lessons": "tsx scripts/validate-lessons.ts"
+  },
+  "devDependencies": {
+    "chess.js": "^1.0.0-beta.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.2.2"
+  }
+}

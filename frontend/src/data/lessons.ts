@@ -3,6 +3,7 @@
  */
 
 export type {
+  ChallengeSequenceStep,
   PostChallengeVisuals,
   SharedLessonStep as LessonStep,
   SharedLesson as Lesson,

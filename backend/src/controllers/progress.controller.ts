@@ -20,6 +20,15 @@ export const updateProgress = async (req: AuthRequest, res: Response) => {
     const { lessonId } = req.params
     const { completed, progress } = req.body
 
+    const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } })
+    if (!lesson) {
+      res.status(404).json({
+        message: 'Lesson not found in database. Progress for this lesson cannot be saved. Run the seed to add all lessons: npm run db:seed (from the backend directory).',
+        code: 'LESSON_NOT_FOUND',
+      })
+      return
+    }
+
     const lessonProgress = await prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: {

@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "db:seed": "npx tsx prisma/seed.ts"
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:validate-lessons": "npx tsx scripts/validate-lesson-ids.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",

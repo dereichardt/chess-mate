@@ -262,9 +262,9 @@ Renders a single piece image from the cburnett set.
 
 ## Data Layer
 
-### Static Lesson Data (`src/data/lessons.ts`)
+### Static Lesson Data (`shared/lessons/`)
 
-Lessons are currently **static TypeScript data**, not fetched from the backend. This is the primary content source for the learning system.
+Lessons are **static TypeScript data** in `shared/lessons/`, re-exported by the frontend; not fetched from the backend. This is the primary content source for the learning system.
 
 **`Lesson` interface:**
 ```ts
@@ -301,9 +301,9 @@ interface LessonStep {
 5. "Opening Principles" — Coming soon
 6. "Endgame Basics" — Coming soon
 
-When adding or editing lesson content, work in `src/data/lessons.ts`. Do not create backend API calls for lesson content until the static data is migrated.
+When adding or editing lesson content, work in **`shared/lessons/`** (the frontend re-exports from there via `src/data/lessons.ts`). Do not create backend API calls for lesson content until the static data is migrated.
 
-For a full guide on authoring lesson content (FEN syntax, highlight types, arrows, challenges, writing conventions), see **`LESSON_AUTHORING.md`** in the project root.
+For a full guide on authoring lesson content (FEN syntax, highlight types, arrows, challenges, writing conventions), see **`LESSON_AUTHORING.md`** in the project root. **New or edited lessons must pass `npm run validate:lessons` (from repo root) and the checklist in LESSON_AUTHORING.md before merge.**
 
 ### API Services (`src/services/`)
 
@@ -477,11 +477,10 @@ This is displayed as progress indicators on lesson cards in `LearnBasics.tsx`.
 
 ### Adding New Lessons
 
-Edit `src/data/lessons.ts` only. Do not create new data files. Ensure:
-- A unique `id` string (e.g. `"lesson-4"`)
-- Sequential `number` field
-- Valid FEN strings for every step (test them at lichess.org/analysis)
-- Consistent use of highlight/arrow props to guide the user visually
+Edit lesson files in **`shared/lessons/`** and export from `shared/lessons/index.ts`. Before merge:
+- Run **`npm run validate:lessons`** from the repo root and fix any errors.
+- Follow the checklist in **`LESSON_AUTHORING.md`** (setup vs narrative, challenge vs concept, play-through).
+- Ensure: unique `id`, sequential `number`, valid FEN for every step (verify at lichess.org/analysis), consistent highlight/arrow props.
 
 ### Adding New Pages
 
@@ -502,7 +501,7 @@ Edit `src/data/lessons.ts` only. Do not create new data files. Ensure:
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Lesson data | Static only | `src/data/lessons.ts` — backend `/api/lessons` exists but is unused |
+| Lesson data | Static only | `shared/lessons/` — backend `/api/lessons` exists but is unused |
 | Puzzles | UI scaffold only | Route and backend exist; UI not yet built |
 | Openings | Placeholder page | Not started |
 | Profile | Placeholder page | Backend `User` model ready |

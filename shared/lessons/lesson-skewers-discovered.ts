@@ -58,7 +58,7 @@ const lessonSkewersDiscovered: SharedLesson = {
       interactive: true,
       challenge: { from: 'e3', to: 'c5' },
       postChallenge: {
-        fen: '4k3/8/8/2B5/8/8/8/4R1K1 w - - 0 1',
+        fen: '4k3/8/8/2B5/8/8/8/4R1K1 b - - 0 1',
         movedFrom: 'e3',
         captureSquares: ['e8'],
         arrows: [['e1', 'e8', 'rgba(34,197,94,0.85)']],
